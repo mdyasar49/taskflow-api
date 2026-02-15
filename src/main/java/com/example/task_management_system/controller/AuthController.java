@@ -43,7 +43,11 @@ public class AuthController {
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername()));
+        // Fetch user from database to get role
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername(), user.getRole()));
     }
 
     @PostMapping("/register")
@@ -58,6 +62,9 @@ public class AuthController {
         User user = new User();
         user.setUsername(signUpRequest.getUsername());
         user.setPassword(encoder.encode(signUpRequest.getPassword()));
+        if (signUpRequest.getRole() != null && !signUpRequest.getRole().isEmpty()) {
+            user.setRole(signUpRequest.getRole());
+        }
 
         userRepository.save(user);
 

@@ -35,6 +35,9 @@ public class User {
     @Column(name = "modified_on")
     private LocalDateTime modifiedOn;
 
+    @Column(name = "role")
+    private String role = "USER"; // Default value
+
     @PrePersist
     protected void onCreate() {
         createdOn = LocalDateTime.now();

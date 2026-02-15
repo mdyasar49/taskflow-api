@@ -22,28 +22,27 @@ public class TaskService {
     }
 
     public Task createTask(Task task) {
-        if (task.getCreatedBy() == null)
+        if (task.getCreatedBy() == null || task.getCreatedBy().isEmpty())
             task.setCreatedBy("SYSTEM");
-        if (task.getModifiedBy() == null)
-            task.setModifiedBy("SYSTEM");
-        if (task.getPriority() == null)
-            task.setPriority("Medium");
+        if (task.getStatus() == null || task.getStatus().isEmpty()) // Ensure status is set
+            task.setStatus("Open");
+        if (task.getPriority() == null || task.getPriority().isEmpty())
+            task.setPriority("MEDIUM");
         return taskRepository.save(task);
     }
 
     public Task updateTask(Long id, Task updatedTask) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
-
-        task.setTitle(updatedTask.getTitle());
-        task.setDescription(updatedTask.getDescription());
-        task.setStatus(updatedTask.getStatus());
-        task.setPriority(updatedTask.getPriority() != null ? updatedTask.getPriority() : "Medium");
-        task.setDueDate(updatedTask.getDueDate());
-        task.setModifiedBy(updatedTask.getModifiedBy() != null ? updatedTask.getModifiedBy() : "SYSTEM");
-        task.setModifiedOn(java.time.LocalDateTime.now());
-
-        return taskRepository.save(task);
+        return taskRepository.findById(id).map(task -> {
+            task.setTitle(updatedTask.getTitle());
+            task.setDescription(updatedTask.getDescription());
+            task.setStatus(updatedTask.getStatus() != null ? updatedTask.getStatus() : task.getStatus()); // Patch logic
+                                                                                                          // safer
+            task.setPriority(updatedTask.getPriority() != null ? updatedTask.getPriority() : task.getPriority());
+            task.setDueDate(updatedTask.getDueDate());
+            task.setModifiedBy("SYSTEM"); // Always update modifier
+            // modifiedOn is handled by @PreUpdate in Entity
+            return taskRepository.save(task);
+        }).orElseThrow(() -> new RuntimeException("Task not found with id " + id));
     }
 
     public void deleteTask(Long id) {

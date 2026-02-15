@@ -24,10 +24,10 @@ public class Task {
     private String description;
 
     @Column(nullable = false)
-    private String status; // Open, In Progress, Done
+    private String status = "Open"; // Open, In Progress, Done
 
     @Column(nullable = false)
-    private String priority; // Low, Medium, High
+    private String priority = "MEDIUM"; // Low, Medium, High
 
     @Column(name = "due_date")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
