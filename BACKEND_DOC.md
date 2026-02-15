@@ -1,73 +1,108 @@
-# 🏗️ Backend Architecture Documentation - TaskFlow API
+# 🗄️ Backend Architecture Documentation - TaskFlow Core Service
 
-This document details the internal architecture, security flows, and data management strategies of the TaskFlow API.
-
----
-
-## 🏛️ 1. Architectural Pattern: Layered Design
-
-The API follows the standard **N-Tier Architecture** to separate concerns and ensure scalability:
-
-- **Controllers (`.controller`)**: The entry point for HTTP requests. Handles request mapping and response encapsulation.
-- **Service Layer (`.service`)**: Contains the core business logic, such as task status cycling and password verification.
-- **Repository Layer (`.repository`)**: Interfaces with the MySQL database using Spring Data JPA.
-- **Models (`.model`)**: Entity classes representing the database schema.
-- **DTOs (`.dto`)**: Data Transfer Objects for decoupled request/response communication.
+This document details the backend architecture of TaskFlow Core, a secure, RESTful microservice built with **Spring Boot 3** and **PostgreSQL**. Its primary purpose is to serve as the operational backend for the TaskFlow Pro frontend.
 
 ---
 
-## 🔒 2. Security & Authentication Flow
+## 🏗️ 1. Core Architecture: Layered MVC Pattern
 
-TaskFlow API implements **Stateless JWT Authentication**:
+The application follows a standard layered architecture for separation of concerns and testability.
 
-1.  **Identity Verification**: When a user logs in, the `AuthService` verifies credentials stored in the `UserRepository`.
-2.  **Token Generation**: `JwtUtils` generates a cryptographically signed token.
-3.  **Request Decoration**: The frontend includes this token in the `Authorization: Bearer <token>` header.
-4.  **Filter Interception**: `AuthTokenFilter` intercepts every request, validates the token, and populates the `SecurityContextHolder`.
-5.  **Access Control**: Endpoints are protected via `SecurityConfig`, ensuring only authenticated users can access task data.
+### 📂 Layers
 
----
-
-## 🗄️ 3. Data Management
-
-### 📊 Database Schema
-
-The system manages two primary entities:
-
-- **Users**:
-  - `id`, `username`, `password` (BCrypt encoded).
-- **Tasks**:
-  - `id`, `title`, `description`, `status` (Open, In Progress, Done).
-  - **Audit Metadata**: `createdBy`, `modifiedBy`, `createdOn`, `modifiedOn`.
-
-### 🔄 Persistence Strategy
-
-- **Hibernate DDL-Auto**: Set to `update` for seamless schema evolution during development.
-- **JPA Specifications**: Enables dynamic filtering of tasks by status and title.
-- **Auto-Timestamps**: Managed at the service/model level to ensure accurate audit trails.
+- **Controller (`com.taskflow.controller`)**: The REST API surface. Validates incoming DTOs and delegates business logic.
+- **Service (`com.taskflow.service`)**: The business logic processing zone. Handles transactions, security checks, and data transformation.
+- **Repository (`com.taskflow.repository`)**: The data access layer. Uses Spring Data JPA for type-safe database queries.
+- **Entity (`com.taskflow.model`)**: The core domain objects mapping to database tables.
 
 ---
 
-## ⚙️ 4. Operational Workflow (How It Works)
+## 🔒 2. Security & Authentication
 
-### Task Lifecycle Processing:
+### 🛡️ Spring Security Implementation
 
-1.  **Request Reception**: `TaskController` receives a `POST` or `PUT` request with task details.
-2.  **Validation**: Ensures required fields like `title` are present.
-3.  **Service Processing**:
-    - For new tasks, the system assigns the initial status and sets the creator's identity.
-    - For updates, it updates the "Modified By" timestamp and the current operational phase.
-4.  **Persistence**: The `TaskRepository` saves the entity to MySQL.
-5.  **Synchronization**: A `201 Created` or `200 OK` response is sent back to the frontend to trigger a UI refresh.
+- **JWT (JSON Web Token)**: The service is stateless. Every request carries a Bearer token in the `Authorization` header.
+- **`JwtRequestFilter`**: A custom filter chain that:
+  1. Intercepts every HTTP request.
+  2. Extracts and validates the JWT.
+  3. Populates the `SecurityContext` with the authenticated user.
+- **BCrypt**: Passwords are hashed with BCrypt (10 rounds) before storage.
 
----
+### 👤 Role-Based Access Control (RBAC)
 
-## 🚀 5. Performance Enhancements
-
-- **Connection Pooling**: Uses HikariCP (default in Spring Boot) for efficient database connection management.
-- **Pagination**: The `GET /api/tasks` endpoint utilizes `Pageable` to prevent large data loads, improving response times.
-- **Eager vs Lazy Loading**: Optimized relationships between entities to avoid N+1 query problems.
+- **`ADMIN`**: Can manage users and view all system tasks.
+- **`USER`**: Can manage their own tasks and view public operational data.
 
 ---
 
-**TaskFlow API Backend - Built for Reliability and Speed.**
+## 💾 3. Data Schema & Persistence
+
+### 🗃️ Database: PostgreSQL (Production) / H2 (Dev)
+
+- **`User` Table**: Stores authentication details.
+  - `id` (Primary Key)
+  - `username` (Unique Index)
+  - `password` (Hashed)
+  - `role` (Enum)
+- **`Task` Table**: Stores operational tasks.
+  - `id` (Primary Key)
+  - `title`, `description`
+  - `status` (Enum: OPEN, IN_PROGRESS, DONE, CANCELED)
+  - `priority` (Enum: HIGH, MEDIUM, LOW)
+  - `dueDate` (Timestamp)
+  - `createdBy`, `lastModifiedBy` (Audit Fields)
+
+---
+
+## ⚡ 4. Advanced Features
+
+### 🔄 Task Cloning Logic
+
+In operational environments, a "Canceled" task is a historical record. It should not be simply "reopened".
+
+- **The Solution**: The backend implements a specific `/clone` endpoint.
+- **How it works**:
+  1. Fetches the source task by ID.
+  2. Creates a _new_ task entity.
+  3. Copies relevant fields (Title, Description).
+  4. Resets status to `OPEN`.
+  5. Prefixes title with `(RESTARTED)` for traceability.
+
+### 🕵️ Auditing
+
+The system uses **Spring Data JPA Auditing** to automatically populate metadata:
+
+- `@CreatedBy`: Who created the record.
+- `@CreatedDate`: When it was created.
+- `@LastModifiedBy`: Who last touched it.
+- `@LastModifiedDate`: When it was last updated.
+
+---
+
+## 🚀 5. API Reference
+
+| Method | Endpoint                | Description                                | Access |
+| :----- | :---------------------- | :----------------------------------------- | :----- |
+| POST   | `/api/auth/login`       | Returns JWT token                          | Public |
+| GET    | `/api/tasks`            | List tasks (supports pagination/search)    | User   |
+| POST   | `/api/tasks`            | Create new task                            | User   |
+| PUT    | `/api/tasks/{id}`       | Update task status/details                 | User   |
+| POST   | `/api/tasks/{id}/clone` | Clone a canceled task into a new open task | User   |
+
+---
+
+## 🛠️ 6. Setup & Deployment
+
+1.  **Configure Database**:
+    Edit `src/main/resources/application.properties`:
+    ```properties
+    spring.datasource.url=jdbc:postgresql://localhost:5432/taskflow_db
+    spring.datasource.username=postgres
+    spring.datasource.password=secret
+    ```
+2.  **Build**: `./mvnw clean package`
+3.  **Run**: `java -jar target/task-management-service-0.0.1-SNAPSHOT.jar`
+
+---
+
+**TaskFlow Core Service - Engineered for Reliability.**

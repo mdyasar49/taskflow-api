@@ -24,7 +24,8 @@ public class TaskController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size,
+                org.springframework.data.domain.Sort.by("modifiedOn").descending());
         Page<Task> tasks;
 
         if (status != null && !status.isEmpty() && !status.equalsIgnoreCase("All")) {

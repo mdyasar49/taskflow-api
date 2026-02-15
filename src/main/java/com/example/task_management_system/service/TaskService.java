@@ -26,6 +26,8 @@ public class TaskService {
             task.setCreatedBy("SYSTEM");
         if (task.getModifiedBy() == null)
             task.setModifiedBy("SYSTEM");
+        if (task.getPriority() == null)
+            task.setPriority("Medium");
         return taskRepository.save(task);
     }
 
@@ -36,7 +38,10 @@ public class TaskService {
         task.setTitle(updatedTask.getTitle());
         task.setDescription(updatedTask.getDescription());
         task.setStatus(updatedTask.getStatus());
+        task.setPriority(updatedTask.getPriority() != null ? updatedTask.getPriority() : "Medium");
+        task.setDueDate(updatedTask.getDueDate());
         task.setModifiedBy(updatedTask.getModifiedBy() != null ? updatedTask.getModifiedBy() : "SYSTEM");
+        task.setModifiedOn(java.time.LocalDateTime.now());
 
         return taskRepository.save(task);
     }

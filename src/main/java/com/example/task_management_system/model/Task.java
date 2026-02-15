@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Entity
 @Table(name = "tasks")
@@ -25,17 +26,26 @@ public class Task {
     @Column(nullable = false)
     private String status; // Open, In Progress, Done
 
+    @Column(nullable = false)
+    private String priority; // Low, Medium, High
+
+    @Column(name = "due_date")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime dueDate;
+
     // Auditing Fields
     @Column(name = "created_by")
     private String createdBy;
 
     @Column(name = "created_on", updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdOn;
 
     @Column(name = "modified_by")
     private String modifiedBy;
 
     @Column(name = "modified_on")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime modifiedOn;
 
     @PrePersist
