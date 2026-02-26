@@ -62,6 +62,8 @@ public class AuthController {
         User user = new User();
         user.setUsername(signUpRequest.getUsername());
         user.setPassword(encoder.encode(signUpRequest.getPassword()));
+        user.setCreatedBy("SYSTEM");
+        user.setModifiedBy("SYSTEM");
         if (signUpRequest.getRole() != null && !signUpRequest.getRole().isEmpty()) {
             user.setRole(signUpRequest.getRole());
         }
