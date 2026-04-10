@@ -1,198 +1,88 @@
-# 🚀 Task Management System - Enterprise Backend
+# Task Management Service - Backend
 
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2.0-6DB33F?style=for-the-badge&logo=spring)
-![Java](https://img.shields.io/badge/Java-17-007396?style=for-the-badge&logo=java)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql)
-![Security](https://img.shields.io/badge/Spring_Security-6.2-6DB33F?style=for-the-badge&logo=spring-security)
-![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=json-web-tokens)
+A robust, enterprise-grade RESTful API built with **Spring Boot 3**, **Spring Security**, and **MySQL**. This service provides a secure and scalable backbone for the Task Management System, featuring JWT-based authentication and a comprehensive task lifecycle engine.
 
-> **Production-Ready, Secure, and Scalable REST API for Enterprise Task Management.**
+## 🏗️ Architecture: Layered MVC Pattern
 
----
+The application follows a standard layered architecture to ensure separation of concerns, high testability, and maintainability.
 
-## 🌟 Executive Summary
+- **Controller Layer**: Handles REST endpoints and DTO validation.
+- **Service Layer**: Implements core business logic and transaction management.
+- **Repository Layer**: Provides type-safe data access via Spring Data JPA.
+- **Model Layer**: Persistent JPA entities mapping to MySQL schema.
 
-The **Task Management System Backend** is a robust, high-performance RESTful API designed to power modern web applications. Built with **Spring Boot 3** and **Java 17**, it implements industry-standard security patterns, comprehensive audit logging, and a layered architecture that ensures scalability and maintainability.
+## 🚀 Key Features
 
-This backend serves as the foundation for the Task Management Frontend, providing secure endpoints for authentication, task lifecycle management, and user administration.
+- **JWT Authentication**: Stateless session management with 24h token expiration.
+- **Role-Based Access (RBAC)**: Secure endpoints based on `USER` and `ADMIN` roles.
+- **Task Lifecycle Management**: Advanced CRUD operations with automatic timestamping (`createdOn`, `modifiedOn`).
+- **Pagination & Sorting**: Optimized data retrieval for high-performance dashboard views.
+- **Global Exception Handling**: Standardized error responses across all endpoints.
+- **Interactive Documentation**: Built-in Swagger/OpenAPI support for API exploration.
 
----
+## 🔒 Security Implementation
 
-## ✨ Key Features (Interview Highlights)
-
-### 🔐 Enterprise-Grade Security
-
-- **Stateless Authentication**: Fully implemented **JWT (JSON Web Token)** based security architecture.
-- **Role-Based Access Control (RBAC)**: Granular permissions for **ADMIN** and **USER** roles.
-- **Password Encryption**: Industry-standard **BCrypt** hashing (10 rounds) for all user credentials.
-- **CORS Configuration**: Securely configured for seamless integration with React/Vite frontends.
-
-### 🛡️ Data Integrity & Auditing
-
-- **Full Audit Trail**: Every record tracks `createdBy`, `createdOn`, `modifiedBy`, and `modifiedOn`.
-- **Automatic Timestamping**: JPA `@PrePersist` and `@PreUpdate` hooks ensure temporal accuracy.
-- **Defensive Programming**: Robust validation and safe default values (e.g., Status defaults to "Open", Priority to "MEDIUM").
-
-### ⚡ High Performance & Scalability
-
-- **Layered Architecture**: Clean separation of concerns (Controller → Service → Repository).
-- **Pagination & Sorting**: Optimized data retrieval for large datasets (default sort by modification date).
-- **Connection Pooling**: HikariCP implementation for efficient database resource management.
-
----
+- **Password Hashing**: BCrypt algorithm with a strength of 10.
+- **Access Control**: Stateless JWT filter on every request.
+- **CORS Support**: Pre-configured for seamless frontend integration.
 
 ## 🛠️ Technology Stack
 
-| Category           | Technology                  | Usage                                      |
-| ------------------ | --------------------------- | ------------------------------------------ |
-| **Core Framework** | Spring Boot 3.2.0           | Application context & dependency injection |
-| **Language**       | Java 17                     | Core logic                                 |
-| **Database**       | MySQL 8.0                   | persistent storage                         |
-| **ORM**            | Spring Data JPA / Hibernate | Object-Relational Mapping                  |
-| **Security**       | Spring Security + JWT       | Authentication & Authorization             |
-| **Build Tool**     | Maven                       | Dependency management & building           |
-| **Utilities**      | Lombok                      | Boilerplate reduction                      |
+- **Framework**: Spring Boot 3.4.2
+- **Security**: Spring Security 6, JJWT (io.jsonwebtoken)
+- **DB & Persistence**: MySQL 8.0, Spring Data JPA, Hibernate
+- **API Documentation**: Springdoc OpenAPI v2.3
+- **Tooling**: Maven, Lombok
 
----
+## 📁 Project Structure
 
-## 📂 Architecture Overview
-
-The application follows a strict **Model-View-Controller (MVC)** design pattern adapted for REST APIs:
-
-```mermaid
-graph TD
-    Client[React Client] <-->|JSON/HTTP| Controller[Controller Layer]
-    Controller <-->|DTOs| Service[Service Layer]
-    Service <-->|Entities| Repository[Repository Layer]
-    Repository <-->|SQL| DB[(MySQL Database)]
+```text
+com.example.task_management_system/
+├── controller/    # Auth and Task REST Controllers
+├── service/       # Business logic implementations
+├── repository/    # JPA repositories for Data Access
+├── model/         # User and Task entities
+├── dto/           # Request/Response payloads
+├── security/      # JWT and Security configurations
+└── exception/     # Custom exceptions and Global Handler
 ```
 
-### Directory Structure
-
-```
-src/main/java/com/example/task_management_system/
-├── controller/       # 🌐 REST Endpoints (AuthController, TaskController)
-├── service/         # 🧠 Business Logic (TaskService, UserServices)
-├── repository/      # 💾 Data Access (JPA Repositories)
-├── model/          # 📦 JPA Entities (User, Task)
-├── dto/            # 📨 Data Transfer Objects (Requests/Responses)
-├── security/       # 🔐 JWT Filters & Config
-└── exception/      # ⚠️ Global Exception Handling
-```
-
----
-
-## 🚀 Getting Started
+## ⚙️ Getting Started
 
 ### Prerequisites
 
-- **Java 17+**
-- **Maven 3.8+**
-- **MySQL 8.0+**
+- JDK 17+
+- Maven
+- MySQL Server 8.0
 
-### Installation & Setup
+### Database Setup
 
-1. **Clone the Repository**
-
-   ```bash
-   git clone <repository-url>
-   cd task-management-service
-   ```
-
-2. **Configure Database**
-   Update `src/main/resources/application.properties`:
-
+1. Create a database: `CREATE DATABASE task_management_db;`
+2. Update `src/main/resources/application.properties` with your credentials:
    ```properties
    spring.datasource.url=jdbc:mysql://localhost:3306/task_management_db
-   spring.datasource.username=root
-   spring.datasource.password=YourPassword
-   app.jwtSecret=YourSecureSecretKey
+   spring.datasource.username=your_user
+   spring.datasource.password=your_password
    ```
 
-3. **Run the Application**
-
-   ```bash
-   # Windows
-   mvnw.cmd spring-boot:run
-
-   # Linux/Mac
-   ./mvnw spring-boot:run
-   ```
-
-   > The API will be available at `http://localhost:8080`.
-
----
-
-## 🔌 API Documentation
-
-### 👤 Authentication
-
-| Method   | Endpoint             | Description              | Payload                                    |
-| -------- | -------------------- | ------------------------ | ------------------------------------------ |
-| **POST** | `/api/auth/register` | Register new user        | `{ "username": "...", "password": "..." }` |
-| **POST** | `/api/auth/login`    | Authenticate & Get Token | `{ "username": "...", "password": "..." }` |
-
-### 📋 Task Management
-
-_All endpoints below require `Authorization: Bearer <token>` header._
-
-| Method     | Endpoint          | Description               |
-| ---------- | ----------------- | ------------------------- |
-| **GET**    | `/api/tasks`      | Get all tasks (Paginated) |
-| **POST**   | `/api/tasks`      | Create a new task         |
-| **PUT**    | `/api/tasks/{id}` | Update task details       |
-| **DELETE** | `/api/tasks/{id}` | Remove a task             |
-
-#### Example: Create Task Payload
-
-```json
-{
-  "title": "Database Migration",
-  "description": "Migrate to PostgreSQL 15",
-  "status": "Open",
-  "priority": "HIGH",
-  "dueDate": "2026-02-20T09:00:00"
-}
-```
-
----
-
-## 🧪 Testing & Validation
-
-You can test the API using **Postman** or **cURL**.
-
-**1. Login & Get Token:**
+### Execution
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+# Using Maven Wrapper
+mvnw spring-boot:run
 ```
 
-**2. Access Protected Route:**
+## 📖 API Reference
 
-```bash
-curl -X GET http://localhost:8080/api/tasks \
-  -H "Authorization: Bearer <YOUR_TOKEN_HERE>"
-```
+Access the interactive Swagger UI at: `http://localhost:8080/swagger-ui/index.html`
 
----
+### Primary Endpoints
 
-## 🚨 Troubleshooting
-
-| Issue                   | Probable Cause    | Solution                                              |
-| ----------------------- | ----------------- | ----------------------------------------------------- |
-| **Connection Refused**  | MySQL not running | Start MySQL service on port 3306.                     |
-| **401 Unauthorized**    | Invalid Token     | Check if JWT token is expired or malformed.           |
-| **Table doesn't exist** | First run         | Ensure `spring.jpa.hibernate.ddl-auto=update` is set. |
+- `POST /api/auth/register` - User signup
+- `POST /api/auth/login` - User authentication (returns JWT)
+- `GET /api/tasks` - Fetch paginated tasks (Requires Token)
+- `POST /api/tasks` - Create new task (Requires Token)
 
 ---
 
-## 👨‍💻 Author
-
-**Mohamed Yasar A.**
-_Full Stack Developer | Java & React Specialist_
-
----
-
-_Last Updated: February 2026_
+_Powering efficient task orchestration._
